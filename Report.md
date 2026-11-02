@@ -12,7 +12,7 @@ Fortunately, shimming, a process that adjusts the currents in a set of conductin
 - **Slice-wise (2D) shimming** uses one set of shim coefficients per slice, updated for every slice during the acquisition.
 
 ### Background - Limitations of 2D shimming
-In practice, 2D shimming should outperform 3D shimming, or at worst perform equally, since the same shim degrees of freedom are used to correct smaller regions (Insert paper here). However, some acquisitions are incompatible with slice-wise shimming, such as any 3D sequence (e.g., 3D multi-echo GRE). 3D sequences encode the signal from the whole volume at once rather than slice by slice, so slice-wise shimming is not possible. They are nevertheless very useful to obtain a higher SNR, which is important for small ROIs such as the spinal cord.
+In practice, 2D shimming should outperform 3D shimming, or at worst perform equally, since the same shim degrees of freedom are used to correct smaller regions (Bréheret A. et al., 2025). However, some acquisitions are incompatible with slice-wise shimming, such as any 3D sequence (e.g., 3D multi-echo GRE). 3D sequences encode the signal from the whole volume at once rather than slice by slice, so slice-wise shimming is not possible. They are nevertheless very useful to obtain a higher SNR, which is important for small ROIs such as the spinal cord.
 
 ## Main question
 Given that slice-wise shimming cannot be used with 3D sequences, it is important to quantify the difference between 3D shimming and slice-wise shimming in the cervical spinal cord.
@@ -42,7 +42,7 @@ The B0 field maps were acquired on a Siemens 7T scanner (syngo MR E12) with a 20
 ### Dataset Summary
 
 | Dataset | N |
-|---|---|---|---|---|
+|---|---|
 | ds007067 (v4.0.0) | 14 | 
 
 The 14 subjects included are sub-093 to sub-107 (sub-097 is not part of the dataset).
@@ -68,10 +68,6 @@ $$\text{RMSE} = \sqrt{\frac{1}{N}\sum_{i=1}^{N} \Delta B_{0,i}^2}$$
 
 where $N$ is the number of voxels in the ROI and $\Delta B_{0,i}$ is the field offset in voxel $i$.
 
-1. **Baseline**: the RMSE of the unshimmed field map was computed slice by slice inside the same ROI as the shimmed outputs, to characterize the initial inhomogeneity along the cord.
-2. **Shimmed fields**: the RMSE of the volume and slice-wise shimmed field maps was computed slice by slice, then combined into one value per subject and method by taking the root mean square across slices.
-3. **Statistics**: the per-subject RMSE values of the two methods were compared with a paired, two-sided Wilcoxon signed-rank test (n = 14), chosen because of the small sample size and the absence of a normality assumption.
-
 
 ## Results
 
@@ -87,7 +83,7 @@ Both shimming methods reduced the field inhomogeneity compared with the baseline
 Slice-wise shimming outperformed volume shimming in all 14 subjects. The RMSE was lower by 94.3 ± 20.8 Hz in absolute terms, or 78.0 ± 6.3% relative to volume shimming. This difference was statistically significant (Wilcoxon signed-rank test, W = 0, p = 1.2 × 10⁻⁴).
 
 ![3D vs slice-wise shimming](figures/volume_vs_slice_wise.png)
-*Figure 2. B0 RMSE in the spinal cord after volume (3D) and slice-wise shimming. Each dot is a subject, gray lines link the two methods for the same subject, and black lines show the median. \*\*\*: p < 0.001 (Wilcoxon signed-rank test).*
+*Figure 2. per subject B0 RMSE in the spinal cord after volume (3D) and slice-wise shimming. Black lines show the median. \*\*\*: p < 0.001 (Wilcoxon signed-rank test).*
 
 *Table 1. B0 RMSE (Hz) in the spinal cord ROI for each subject.*
 
@@ -110,16 +106,27 @@ Slice-wise shimming outperformed volume shimming in all 14 subjects. The RMSE wa
 | **Mean ± SD** | **177.1 ± 54.4** | **120.7 ± 23.5** | **26.3 ± 8.0** |
 
 
-## Discussion
-Before shimming, the B0 field in the spinal cord ROI was highly inhomogeneous, with a per-subject RMSE of 177.1 ± 54.4 Hz (mean ± SD; range 107.8–273.0 Hz). The inhomogeneity was also very uneven along the cord (Figure 1). Most slices had a moderate RMSE (median of all slices: 62.1 Hz), but every subject had a long tail of slices with a much larger offset, up to 293–859 Hz. In 10 of the 14 subjects, the worst slice was the most inferior one, closest to the lungs. 
+Before shimming, the B0 field in the spinal cord ROI was highly inhomogeneous, with a per-subject RMSE of 177.1 ± 54.4 Hz (mean ± SD; range 107.8–273.0 Hz). The inhomogeneity was also very uneven along the cord (Figure 1). Most slices had a moderate RMSE (median of all slices: 62.1 Hz), but every subject had slices with a much larger offset, up to 293–859 Hz. In 10 of the 14 subjects, the worst slice was the most inferior one, closest to the lungs.
 
+### Why volume shimming performs poorly
+Volume shimming only reduced the RMSE by 28.6%, while slice-wise shimming reduced it by 84.1%. This gap comes mostly from the size of the region each set of coefficients has to correct. The volume ROI spans 56–60 slices (about 150 mm along the cord), whereas each slice-wise region is a single multiband group of 2 slices, i.e., about 30 times fewer voxels. With only 4 degrees of freedom (f0 and three linear gradients), a single set of coefficients cannot follow a field that varies non-linearly along the cord and rises sharply in the inferior slices near the lungs. The  solution is then a compromise driven by these large offsets, which leaves the other slices poorly corrected. In contrast, with slice-wise shimming.
 
-## Conclusion  
+### Trade-off between shimming and SNR
+Even though slice-wise shimming gives a much more homogeneous field, this does not mean that 2D sequences should always be preferred. 3D sequences remain attractive for the spinal cord because of their higher SNR. For the same voxel size and readout bandwidth, the SNR is proportional to the square root of the number of times each voxel is sampled:
 
+$$\text{SNR}_{2D} \propto \Delta V \sqrt{\frac{N_y \, N_{avg}}{BW}}, \qquad \text{SNR}_{3D} \propto \Delta V \sqrt{\frac{N_y \, N_z}{BW}}$$
 
-## Acknowledgments
+where $\Delta V$ is the voxel volume, $N_y$ the number of phase-encoding lines, $N_z$ the number of partitions, $N_{avg}$ the number of averages and $BW$ the readout bandwidth. With a single average, the 3D acquisition therefore has an SNR advantage of about $\sqrt{N_z}$, at the cost of a longer acquisition per volume.
 
+The better homogeneity of slice-wise shimming may thus not compensate for the SNR penalty of a 2D acquisition. This trade-off should be investigated for acquisitions that benefit from shimming but are SNR limited, such as quantitative susceptibility mapping (QSM) of the spinal cord, which typically relies on 3D multi-echo GRE.
 
+### Limitations
+- **Simulated shimming**: the shimmed field maps are predictions from Shimming Toolbox. They assume that the shim coils produce exactly the modeled fields and, for slice-wise shimming, that the currents can be switched instantly between slices, without eddy currents.
+- **Unconstrained optimizer**: the pseudo-inverse does not enforce the scanner's current limits, so some coefficients, especially the slice-wise ones that vary rapidly, may not be achievable in practice. The reported slice-wise RMSE is therefore a best case.
+- **Shim order**: only the f0 and linear terms were used. Using the scanner's second-order shims, or a dedicated spinal cord shim array (Topfer et al., 2016), may reduce the gap between the two methods.
+
+### Future work
+Further investigation should compare the SNR in the spinal cord between specific 3D and 2D sequences, combining the SNR scaling of each acquisition with the signal loss predicted from the residual through-slice gradient after volume and slice-wise shimming. Acquiring the shimmed sequences in vivo would also confirm whether the simulated improvement translates to the images.
 
 ## References
 - Alonso Ortiz, E., Tous, C., Topfer, R., & Cohen-Adad, J. (2020, August). Real-time z-shimming for magnetic resonance imaging of the spinal cord [Paper]. ISMRM & SMRT annual Meeting & Exhibition (ISMRM 2020). https://archive.ismrm.org/2020/3717.html
