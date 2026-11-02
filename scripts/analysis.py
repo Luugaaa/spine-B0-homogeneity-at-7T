@@ -35,8 +35,12 @@ rmse_slice_wise_per_slice = {}
 
 for sub in SUBJECTS:
     fmap = nib.load(os.path.join(DATA, sub, "fmap", "fmap.nii.gz")).get_fdata()
-    volume = nib.load(os.path.join(DATA, sub, "shim", "volume", "fieldmap_calculated_shim_masked.nii.gz")).get_fdata()
-    slice_wise = nib.load(os.path.join(DATA, sub, "shim", "slice_wise", "fieldmap_calculated_shim_masked.nii.gz")).get_fdata()
+    volume_dir = os.path.join(DATA, sub, "shim", "volume")
+    volume_file = [f for f in os.listdir(volume_dir) if f.startswith("fieldmap_calculated") and f.endswith(".nii.gz")][0]
+    volume = nib.load(os.path.join(volume_dir, volume_file)).get_fdata()
+    slice_wise_dir = os.path.join(DATA, sub, "shim", "slice_wise")
+    slice_wise_file = [f for f in os.listdir(slice_wise_dir) if f.startswith("fieldmap_calculated") and f.endswith(".nii.gz")][0]
+    slice_wise = nib.load(os.path.join(slice_wise_dir, slice_wise_file)).get_fdata()
 
     mask = roi(volume)
 
