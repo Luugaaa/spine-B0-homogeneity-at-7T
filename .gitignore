@@ -1,12 +1,18 @@
 *json
 *nii*
+# Directories
+datasets/
+data/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
+.DS_Store
 
 # C extensions
 *.so
+*.json
+*.nii.gz
 
 # Distribution / packaging
 .Python
