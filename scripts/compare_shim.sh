@@ -13,7 +13,7 @@ for SUB in $SUBJECTS; do
         --mask "$MASK" \
         --output "${IN}/shim/volume" \
         --slices 'volume' \
-        --optimizer-method "lin_lsq" \
+        --optimizer-method "pseudo_inverse" \
         --mask-dilation-kernel-size 3 \
         --scanner-coil-order '0,1'\
 
@@ -24,7 +24,7 @@ for SUB in $SUBJECTS; do
         --mask "$MASK" \
         --output "${IN}/shim/slice_wise" \
         --slices 'auto' \
-        --optimizer-method "lin_lsq" \
+        --optimizer-method "pseudo_inverse" \
         --mask-dilation-kernel-size 3 \
         --scanner-coil-order '0,1'\
 
