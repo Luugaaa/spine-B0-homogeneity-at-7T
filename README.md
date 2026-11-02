@@ -1,46 +1,153 @@
 # ing8100-reproductibility-project
 
+## Research Question
+
+Can slice-wise shimming provide a better B0 field homogeneity in the spinal cord compared to volume shimming ?
+
+---
+
 ## Data
 
 This dataset was choosen because it has a CC0 liscense allowing us to work with them. They come from collaborators: Alexandre D'Astous, PhD candidate at Neuropoly, Polytechnique Montreal and Julien Cohen-Adad, Professor at Polytechnique Montraal, co-director from Neuropoly. It was taken from OpenNeuro: https://openneuro.org/datasets/ds007067/versions/4.0.0.
 
-This data were acquired in the spinal cord and we want to do a shimming simulation using the fielmap data in order to compare two methods: volume 
-slice shimming and slice-wise shimming. This dataset is revelevant for ING8100 beccause it's an open source dataset with a complex structure already organized according to the BIDS format.
-
-
-## Data Download
-
-The data was also uploaded on Borealis:
-https://demo.borealisdata.ca/dataset.xhtml?persistentId=doi:10.80240/FK2/KRFTCT
-
-Only the `fmap` folders are needed for the shimming simulation. A Python script is provided to download them automatically via the Dataverse API.
-
-### Setup
-
-First step is to create an environment with the right dependencies:
-
-```bash
-conda create -n spineHomogeneity python=3.11
-conda activate spineHomogeneity
-pip install requests
-```
-
-> Note: for now just installing `requests` works, but a `environment.yml` will be added at the end of the project.
-
-### Download
-
-```bash
-python scripts/download_fmap.py
-```
-
-The script queries the Borealis API, filters files whose path contains `fmap`, and saves them under the `data/` folder while preserving the original BIDS directory structure.
+This data were acquired in the spinal cord and we want to do a shimming simulation using the fielmap data in order to compare two methods: volume slice shimming and slice-wise shimming. This dataset is revelevant for ING8100 beccause it's an open source dataset with a complex structure already organized according to the BIDS format.
 
 ---
 
-### Preprocessing
+## Prerequisites
 
-Files downloaded from Borealis have a `-2` suffix before their extension (e.g. `sub-093_magnitude1-2.json`). Run the renaming script to fix this:
+Two external tools must be installed before running this pipeline.
 
+### Spinal Cord Toolbox (SCT)
+
+Used to segment the spinal cord and generate masks (`sct_deepseg`).
+
+Go to the lastest realase: https://github.com/spinalcordtoolbox/spinalcordtoolbox/releases/ and download the version associated to your OS.
+
+Full installation guide: https://spinalcordtoolbox.com/user_section/installation.html
+
+### Shimming Toolbox
+
+Used to generate fieldmaps and simulate shimming strategies (`st_prepare_fieldmap`, `st_b0shim`).
+
+The installation depends on your OS.
+
+Full installation guide: https://shimming-toolbox.org/en/latest/user_section/install.html
+
+---
+
+## Setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/<your-org>/ing8100-reproductibility-project
+cd ing8100-reproductibility-project
+```
+
+### 2. Create the conda environment
+
+```bash
+conda env create -f environment.yml
+conda activate spineHomogeneity
+```
+
+> The `environment.yml` includes all Python dependencies. SCT and Shimming Toolbox must still be installed separately (see Prerequisites above).
+
+## Reproductibility
+
+### 1. Download the data
+
+Downloads the magnitude and phase data from OpenNeuro: https://openneuro.org/datasets/ds007067/versions/4.0.0
+
+```bash
+bash scripts/download_data.sh
+```
+
+### 2. Generate the fieldmap
+
+Uses `st_prepare_fieldmap` from the Shimming Toolbox to generate the fieldmap from each subject's phase images.
+
+```bash
+bash scripts/generate_fmap.sh
+```
+
+### 3. Create spinal cord masks
+
+Uses `sct_deepseg` from the Spinal Cord Toolbox to segment the spinal cord on each subject's magnitude image and generate a binary mask.
+
+```bash
+bash scripts/create_mask.sh
+```
+
+### 4. Run shimming simulations
+
+Uses `st_b0shim` from the Shimming Toolbox to simulate both volume shimming and slice-wise shimming on each subject's fieldmap, using the masks generated in the previous step.
+
+```bash
+bash scripts/compare_shim.sh
+```
+
+### 5. Run the analysis
+
+Computes B0 field homogeneity metrics (standard deviation, RMSE) for each method and subject, and generates comparison figures saved in `results/`.
+
+```bash
+python scripts/analysis.py
+```
+
+---
+
+## Folder Structure
+
+```
+spine-B0-homogeneity-at-7T/
+├── figures/
+│   ├── baseline_per_slice.png       # B0 std per slice before shimming
+│   └── volume_vs_slice_wise.png     # Comparison of both shimming methods
+├── scripts/
+│   ├── download_data.sh             # Download magnitude and phase data from OpenNeuro
+│   ├── generate_fmap.sh             # Generate fieldmaps with st_prepare_fieldmap
+│   ├── create_sc_masks.sh           # Generate spinal cord masks with sct_deepseg
+│   ├── compare_shim.sh              # Run shimming simulations with st_b0shim
+│   ├── analysis.py                  # Statistical analysis and figures
+│   └── rename_fmap.py               # Remove spurious -2 suffix (Borealis)
+├── .gitignore
+├── AI_Prompts.md
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── README.md
+├── Report.md
+└── environment.yml
+```
+
+> **Note:** The `data/` folder is not tracked by Git (see `.gitignore`). Run `bash scripts/download_data.sh` to populate it locally.
+## Note: Borealis Download Issue
+
+Initially we wanted to download only the `fmap` folders from the Borealis mirror of the dataset:
+https://demo.borealisdata.ca/dataset.xhtml?persistentId=doi:10.80240/FK2/KRFTCT
+
+```bash
+python scripts/download_fmap.py #(not existing anymore)
+```
+
+Then add a preprocessing step to remove spurious -2 suffix added by Borealis
 ```bash
 python scripts/rename_fmap.py
 ```
+
+However, the files uploaded to Borealis were symlinks from DataLab and not the actual data. We therefore download directly from OpenNeuro instead.
+
+---
+
+## Authors
+
+Mathis Ors & Annaelle Sarrazin
+
+---
+
+## License
+
+The dataset is released under a **CC0 1.0 Universal** license (public domain).
+The code in this repository is released under the **MIT License**.
