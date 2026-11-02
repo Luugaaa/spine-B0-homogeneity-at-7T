@@ -11,7 +11,7 @@ for SUB in $SUBJECTS; do
     st_prepare_fieldmap $PHASEDIFF \
         --mag "$MAG1" \
         --output "$DATA/$SUB/fmap/fmap.nii.gz" \
-        --threshold 0.01 \
+        --threshold 0.008 \
         --gaussian-filter True \
         --sigma 1 
 
