@@ -77,6 +77,16 @@ conda activate spineHomogeneity
 
 All commands must be run from the root of the repository, since the scripts use relative paths (`./data/ds007067`).
 
+> **Running on a subset of subjects:** every step takes `-n N` to run on the first N subjects, or `-s` followed by subject names to pick specific ones. Use the same selection for every step, otherwise later steps will look for files that were never generated. For example:
+>
+> ```bash
+> bash scripts/download_data.sh -n 3          # sub-093, sub-094, sub-095
+> bash scripts/create_sc_masks.sh -s sub-093 sub-100
+> python scripts/analysis.py -s 093 100       # the sub- prefix is optional
+> ```
+>
+> Without flag, all 14 subjects are used. Note that with fewer than 6 subjects the Wilcoxon test can't reach p < 0.05.
+
 > **⚠️ Long processing time:** steps 2 to 4 process the 14 subjects one after the other and can take a long time to complete (fieldmap generation, deep learning segmentation and two shimming optimizations per subject). Expect the full pipeline to run for a significant amount of time, especially on a machine without a GPU. Each script prints the subject it is currently processing (`=========== sub-XXX ===========`) so you can follow its progress.
 
 ### 1. Download the data
@@ -134,7 +144,8 @@ spine-B0-homogeneity-at-7T/
 │   ├── create_sc_masks.sh           # Generate spinal cord masks with sct_deepseg
 │   ├── compare_shim.sh              # Run shimming simulations with st_b0shim
 │   ├── analysis.py                  # Statistical analysis and figures
-│   └── rename_fmap.py               # Remove spurious -2 suffix (Borealis)
+│   ├── rename_fmap.py               # Remove spurious -2 suffix (Borealis)
+│   └── subjects.sh                  # Subject selection (-n / -s) shared by the bash scripts
 ├── .gitignore
 ├── AI_Prompts.md
 ├── CODE_OF_CONDUCT.md

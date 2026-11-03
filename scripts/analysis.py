@@ -1,3 +1,4 @@
+import argparse
 import os
 import nibabel as nib
 import numpy as np
@@ -7,8 +8,28 @@ import seaborn as sns
 from statannotations.Annotator import Annotator
 
 DATA = "./data/ds007067"
-SUBJECTS = ["sub-093", "sub-094", "sub-095", "sub-096", "sub-098", "sub-099", "sub-100",
-            "sub-101", "sub-102", "sub-103", "sub-104", "sub-105", "sub-106", "sub-107"]
+ALL_SUBJECTS = ["sub-093", "sub-094", "sub-095", "sub-096", "sub-098", "sub-099", "sub-100",
+                "sub-101", "sub-102", "sub-103", "sub-104", "sub-105", "sub-106", "sub-107"]
+
+# Same subject selection as the bash scripts (see scripts/subjects.sh)
+parser = argparse.ArgumentParser()
+group = parser.add_mutually_exclusive_group()
+group.add_argument("-n", type=int, help="run on the first N subjects")
+group.add_argument("-s", nargs="+", metavar="SUB", help="run on the given subjects only")
+args = parser.parse_args()
+
+if args.n is not None:
+    if args.n < 1:
+        parser.error("-n expects a positive integer")
+    SUBJECTS = ALL_SUBJECTS[:args.n]
+elif args.s:
+    SUBJECTS = [s if s.startswith("sub-") else f"sub-{s}" for s in args.s]
+    unknown = [s for s in SUBJECTS if s not in ALL_SUBJECTS]
+    if unknown:
+        parser.error(f"unknown subjects: {unknown}")
+else:
+    SUBJECTS = ALL_SUBJECTS
+print("Subjects:", " ".join(SUBJECTS))
 
 
 def rmse(fmap):

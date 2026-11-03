@@ -4,7 +4,7 @@ set -euo pipefail
 
 DATA=./data/ds007067
 S3=https://s3.amazonaws.com/openneuro.org/ds007067
-SUBJECTS="sub-093 sub-094 sub-095 sub-096 sub-098 sub-099 sub-100 sub-101 sub-102 sub-103 sub-104 sub-105 sub-106 sub-107"
+source "$(dirname "$0")/subjects.sh" "$@"
 FILES="magnitude1 magnitude2 phasediff"
 
 for SUB in $SUBJECTS; do
