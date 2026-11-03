@@ -24,6 +24,9 @@ Used to segment the spinal cord and generate masks (`sct_deepseg`).
 
 Go to the latest release: https://github.com/spinalcordtoolbox/spinalcordtoolbox/releases/ and download the version associated with your OS.
 
+**Tested version:** SCT 7.3 (`sct_version`: `git-master-c428562d0b5fd3f386d656be89d31a61ade972a8`).
+Other versions may produce different segmentation masks and therefore different results.
+
 Full installation guide: https://spinalcordtoolbox.com/user_section/installation.html
 
 ### Shimming Toolbox
