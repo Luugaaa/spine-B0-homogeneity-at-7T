@@ -1,16 +1,16 @@
-# ing8100-reproductibility-project
+# spine-B0-homogeneity-at-7T
 
 ## Research Question
 
-Can slice-wise shimming provide a better B0 field homogeneity in the spinal cord compared to volume shimming ?
+Can slice-wise shimming provide a better B0 field homogeneity in the spinal cord compared to volume shimming?
 
 ---
 
 ## Data
 
-This dataset was choosen because it has a CC0 liscense allowing us to work with them. They come from collaborators: Alexandre D'Astous, PhD candidate at Neuropoly, Polytechnique Montreal and Julien Cohen-Adad, Professor at Polytechnique Montraal, co-director from Neuropoly. It was taken from OpenNeuro: https://openneuro.org/datasets/ds007067/versions/4.0.0.
+This dataset was chosen because it has a CC0 license allowing us to work with it. It comes from collaborators: Alexandre D'Astous, PhD candidate at NeuroPoly, Polytechnique Montréal, and Julien Cohen-Adad, Professor at Polytechnique Montréal and co-director of NeuroPoly. It was taken from OpenNeuro: https://openneuro.org/datasets/ds007067/versions/4.0.0.
 
-This data were acquired in the spinal cord and we want to do a shimming simulation using the fielmap data in order to compare two methods: volume slice shimming and slice-wise shimming. This dataset is revelevant for ING8100 beccause it's an open source dataset with a complex structure already organized according to the BIDS format.
+These data were acquired in the spinal cord and we want to do a shimming simulation using the fieldmap data in order to compare two methods: volume shimming and slice-wise shimming. This dataset is relevant for ING8100 because it's an open source dataset with a complex structure already organized according to the BIDS format.
 
 ---
 
@@ -22,7 +22,7 @@ Two external tools must be installed before running this pipeline.
 
 Used to segment the spinal cord and generate masks (`sct_deepseg`).
 
-Go to the lastest realase: https://github.com/spinalcordtoolbox/spinalcordtoolbox/releases/ and download the version associated to your OS.
+Go to the latest release: https://github.com/spinalcordtoolbox/spinalcordtoolbox/releases/ and download the version associated with your OS.
 
 Full installation guide: https://spinalcordtoolbox.com/user_section/installation.html
 
@@ -41,8 +41,8 @@ Full installation guide: https://shimming-toolbox.org/en/latest/user_section/ins
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-org>/ing8100-reproductibility-project
-cd ing8100-reproductibility-project
+git clone https://github.com/mathisors/spine-B0-homogeneity-at-7T
+cd spine-B0-homogeneity-at-7T
 ```
 
 ### 2. Create the conda environment
@@ -54,7 +54,13 @@ conda activate spineHomogeneity
 
 > The `environment.yml` includes all Python dependencies. SCT and Shimming Toolbox must still be installed separately (see Prerequisites above).
 
-## Reproductibility
+---
+
+## Reproducibility
+
+All commands must be run from the root of the repository, since the scripts use relative paths (`./data/ds007067`).
+
+> **⚠️ Long processing time:** steps 2 to 4 process the 14 subjects one after the other and can take a long time to complete (fieldmap generation, deep learning segmentation and two shimming optimizations per subject). Expect the full pipeline to run for a significant amount of time, especially on a machine without a GPU. Each script prints the subject it is currently processing (`=========== sub-XXX ===========`) so you can follow its progress.
 
 ### 1. Download the data
 
@@ -74,10 +80,10 @@ bash scripts/generate_fmap.sh
 
 ### 3. Create spinal cord masks
 
-Uses `sct_deepseg` from the Spinal Cord Toolbox to segment the spinal cord on each subject's magnitude image and generate a binary mask.
+Uses `sct_deepseg` from the Spinal Cord Toolbox to segment the spinal cord on each subject's magnitude image and generate a binary mask, dilated by 2 voxels.
 
 ```bash
-bash scripts/create_mask.sh
+bash scripts/create_sc_masks.sh
 ```
 
 ### 4. Run shimming simulations
@@ -90,7 +96,7 @@ bash scripts/compare_shim.sh
 
 ### 5. Run the analysis
 
-Computes B0 field homogeneity metrics (standard deviation, RMSE) for each method and subject, and generates comparison figures saved in `results/`.
+Computes the B0 field RMSE in the spinal cord for the baseline and both shimming methods, for each subject, and generates the comparison figures saved in `figures/`.
 
 ```bash
 python scripts/analysis.py
@@ -103,7 +109,7 @@ python scripts/analysis.py
 ```
 spine-B0-homogeneity-at-7T/
 ├── figures/
-│   ├── baseline_per_slice.png       # B0 std per slice before shimming
+│   ├── baseline_per_slice.png       # Baseline B0 RMSE per slice before shimming
 │   └── volume_vs_slice_wise.png     # Comparison of both shimming methods
 ├── scripts/
 │   ├── download_data.sh             # Download magnitude and phase data from OpenNeuro
@@ -123,6 +129,9 @@ spine-B0-homogeneity-at-7T/
 ```
 
 > **Note:** The `data/` folder is not tracked by Git (see `.gitignore`). Run `bash scripts/download_data.sh` to populate it locally.
+
+---
+
 ## Note: Borealis Download Issue
 
 Initially we wanted to download only the `fmap` folders from the Borealis mirror of the dataset:
@@ -132,12 +141,12 @@ https://demo.borealisdata.ca/dataset.xhtml?persistentId=doi:10.80240/FK2/KRFTCT
 python scripts/download_fmap.py #(not existing anymore)
 ```
 
-Then add a preprocessing step to remove spurious -2 suffix added by Borealis
+Then add a preprocessing step to remove the spurious -2 suffix added by Borealis:
 ```bash
 python scripts/rename_fmap.py
 ```
 
-However, the files uploaded to Borealis were symlinks from DataLab and not the actual data. We therefore download directly from OpenNeuro instead.
+However, the files uploaded to Borealis were symlinks from DataLad and not the actual data. We therefore download directly from OpenNeuro instead.
 
 ---
 
