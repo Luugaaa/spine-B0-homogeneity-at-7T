@@ -16,7 +16,7 @@ These data were acquired in the spinal cord and we want to do a shimming simulat
 
 ## Prerequisites
 
-Two external tools must be installed before running this pipeline.
+Three external tools must be installed before running this pipeline.
 
 ### Spinal Cord Toolbox (SCT)
 
@@ -33,6 +33,20 @@ Used to generate fieldmaps and simulate shimming strategies (`st_prepare_fieldma
 The installation depends on your OS.
 
 Full installation guide: https://shimming-toolbox.org/en/latest/user_section/install.html
+
+### FSL
+
+`st_prepare_fieldmap` relies on FSL's `prelude` for phase unwrapping.
+
+The Shimming Toolbox installer is supposed to install FSL, but sometimes it doesn't. If you get `FileNotFoundError: [Errno 2] No such file or directory: 'prelude'` when running `generate_fmap.sh`, install FSL manually.
+
+Installation guide (macOS): https://fsl.fmrib.ox.ac.uk/fsl/docs/install/macos.html
+
+Check that it's available with:
+
+```bash
+which prelude
+```
 
 ---
 
